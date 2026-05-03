@@ -331,6 +331,44 @@
   .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: .4; }
   .empty-text { font-size: .9rem; }
 
+  /* ── Autocomplete dropdown ── */
+  .autocomplete-wrap { position: relative; }
+  .autocomplete-list {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+    background: var(--card); border: 1px solid var(--accent);
+    border-top: none; border-radius: 0 0 8px 8px;
+    max-height: 260px; overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    display: none;
+  }
+  .autocomplete-list.open { display: block; }
+  .autocomplete-item {
+    padding: .6rem 1rem; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+    display: flex; flex-direction: column; gap: .15rem;
+  }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:hover, .autocomplete-item.highlighted { background: var(--highlight); }
+  .ac-name { font-weight: 600; font-size: .88rem; color: var(--text); }
+  .ac-meta { font-size: .74rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .ac-badge { display: inline-block; font-size: .65rem; background: rgba(245,166,35,.15); color: var(--accent); border: 1px solid rgba(245,166,35,.3); border-radius: 10px; padding: .1rem .4rem; margin-left: .4rem; }
+
+  /* ── Search-by selector ── */
+  .search-by-wrap { display: flex; gap: .5rem; align-items: center; flex: 1; min-width: 260px; }
+  .search-by-select { flex: 0 0 auto; min-width: 110px; font-size: .8rem; padding: .55rem .7rem; }
+
+  /* ── Trailer plate field indicator ── */
+  .trailer-wrap { position: relative; }
+  .trailer-label-tag {
+    position: absolute; right: .6rem; top: 50%; transform: translateY(-50%);
+    font-size: .6rem; font-weight: 700; letter-spacing: .08em;
+    color: var(--accent); background: rgba(245,166,35,.1);
+    border: 1px solid rgba(245,166,35,.25); border-radius: 4px;
+    padding: .1rem .35rem; pointer-events: none;
+    text-transform: uppercase;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 640px) {
     header { padding: 0 1rem; }
@@ -464,11 +502,22 @@
         </div>
         <div class="form-group">
           <label>Placa do Veículo</label>
-          <input type="text" id="d-placa" placeholder="Ex: ABC-1234" maxlength="10">
+          <input type="text" id="d-placa" placeholder="Ex: ABC-1234" maxlength="10" oninput="this.value=this.value.toUpperCase()">
         </div>
-        <div class="form-group half">
+        <div class="form-group">
+          <label>Placa do Trailer <span style="font-size:.65rem;color:var(--muted);font-weight:400;text-transform:none;">(quando aplicável)</span></label>
+          <div class="trailer-wrap">
+            <input type="text" id="d-placa-trailer" placeholder="Ex: XYZ-5678" maxlength="10" oninput="this.value=this.value.toUpperCase()">
+            <span class="trailer-label-tag">Trailer</span>
+          </div>
+        </div>
+        <div class="form-group half" style="position:relative;">
           <label>Nome Completo <span class="req">*</span></label>
-          <input type="text" id="d-nome" placeholder="Nome do visitante">
+          <div class="autocomplete-wrap">
+            <input type="text" id="d-nome" placeholder="Digite ou busque pelo cadastro..." autocomplete="off"
+              oninput="acSearch(this.value)" onkeydown="acKeyNav(event)" onfocus="acSearch(this.value)">
+            <div class="autocomplete-list" id="ac-list"></div>
+          </div>
         </div>
         <div class="form-group">
           <label>RG</label>
@@ -502,9 +551,18 @@
     </div>
 
     <div class="filter-bar">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" placeholder="Buscar por nome, placa, empresa..." oninput="filterTable('dados')" id="search-dados">
+      <div class="search-by-wrap">
+        <select class="filter-select search-by-select" id="search-by-dados" onchange="filterTable('dados')">
+          <option value="all">🔍 Tudo</option>
+          <option value="nome">Nome</option>
+          <option value="rg">RG</option>
+          <option value="cpf">CPF</option>
+          <option value="placa">Placa</option>
+        </select>
+        <div class="search-wrap" style="flex:1;">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Buscar por nome, RG, CPF, placa..." oninput="filterTable('dados')" id="search-dados">
+        </div>
       </div>
       <input type="date" id="filt-data-inicio" onchange="filterTable('dados')" title="Data inicial" style="flex:0 0 auto;min-width:150px;">
       <input type="date" id="filt-data-fim" onchange="filterTable('dados')" title="Data final" style="flex:0 0 auto;min-width:150px;">
@@ -517,13 +575,14 @@
           <tr>
             <th onclick="sortTable('dados',0)">Data <span class="sort-icon">↕</span></th>
             <th onclick="sortTable('dados',1)">Placa <span class="sort-icon">↕</span></th>
-            <th onclick="sortTable('dados',2)">Nome <span class="sort-icon">↕</span></th>
-            <th onclick="sortTable('dados',3)">RG <span class="sort-icon">↕</span></th>
-            <th onclick="sortTable('dados',4)">CPF <span class="sort-icon">↕</span></th>
-            <th onclick="sortTable('dados',5)">Cargo <span class="sort-icon">↕</span></th>
-            <th onclick="sortTable('dados',6)">Empresa <span class="sort-icon">↕</span></th>
-            <th onclick="sortTable('dados',7)">Entrada <span class="sort-icon">↕</span></th>
-            <th onclick="sortTable('dados',8)">Saída <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',2)">Trailer <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',3)">Nome <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',4)">RG <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',5)">CPF <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',6)">Cargo <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',7)">Empresa <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',8)">Entrada <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',9)">Saída <span class="sort-icon">↕</span></th>
             <th>Status</th>
             <th>Ações</th>
           </tr>
@@ -766,8 +825,9 @@ async function addDado() {
 
   try {
     await addToFirestore('dados', {
-      data:    `${d2}/${m}/${y}`,
-      placa:   document.getElementById('d-placa').value.trim().toUpperCase(),
+      data:         `${d2}/${m}/${y}`,
+      placa:        document.getElementById('d-placa').value.trim().toUpperCase(),
+      placaTrailer: document.getElementById('d-placa-trailer').value.trim().toUpperCase(),
       nome,
       rg:      document.getElementById('d-rg').value.trim(),
       cpf:     document.getElementById('d-cpf').value.trim(),
@@ -791,19 +851,20 @@ async function addDado() {
 function clearForm(prefix) {
   const ids = prefix === 'c'
     ? ['c-nome','c-rg','c-cpf','c-cargo','c-empresa','c-motivo']
-    : ['d-data','d-placa','d-nome','d-rg','d-cpf','d-cargo','d-empresa','d-entrada','d-saida'];
+    : ['d-data','d-placa','d-placa-trailer','d-nome','d-rg','d-cpf','d-cargo','d-empresa','d-entrada','d-saida'];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.value = el.tagName === 'SELECT' ? '' : (id === 'd-data' ? new Date().toISOString().split('T')[0] : '');
   });
+  acClose();
 }
 
 // ═══════════════════════════════════════════════════════════════
 // FILTER
 // ═══════════════════════════════════════════════════════════════
 function filterTable(type) {
-  const q = document.getElementById('search-' + type).value.toLowerCase();
+  const q = (document.getElementById('search-' + type) || {value:''}).value.toLowerCase();
 
   if (type === 'cadastro') {
     const motivo = document.getElementById('filt-motivo').value;
@@ -812,10 +873,19 @@ function filterTable(type) {
       return match && (!motivo || r.motivo === motivo);
     });
   } else {
+    const q = document.getElementById('search-dados').value.toLowerCase();
+    const searchBy = document.getElementById('search-by-dados').value;
     const di = document.getElementById('filt-data-inicio').value;
     const df = document.getElementById('filt-data-fim').value;
     filtered.dados = db.dados.filter(r => {
-      const match = [r.nome,r.placa,r.cpf,r.empresa,r.cargo].join(' ').toLowerCase().includes(q);
+      let match = true;
+      if (q) {
+        if (searchBy === 'nome')  match = (r.nome||'').toLowerCase().includes(q);
+        else if (searchBy === 'rg')   match = (r.rg||'').toLowerCase().includes(q);
+        else if (searchBy === 'cpf')  match = (r.cpf||'').toLowerCase().includes(q);
+        else if (searchBy === 'placa') match = [(r.placa||''),(r.placaTrailer||'')].join(' ').toLowerCase().includes(q);
+        else match = [r.nome,r.rg,r.cpf,r.placa,r.placaTrailer,r.empresa,r.cargo].join(' ').toLowerCase().includes(q);
+      }
       let dateOk = true;
       if ((di || df) && r.data) {
         const [d2,m2,y2] = r.data.split('/');
@@ -838,7 +908,7 @@ function sortTable(type, col) {
   if (s.col === col) s.asc = !s.asc; else { s.col = col; s.asc = true; }
   const keys = type === 'cadastro'
     ? ['nome','rg','cpf','cargo','empresa','motivo']
-    : ['data','placa','nome','rg','cpf','cargo','empresa','entrada','saida'];
+    : ['data','placa','placaTrailer','nome','rg','cpf','cargo','empresa','entrada','saida'];
   const k = keys[col];
   filtered[type].sort((a,b) => {
     const va = (a[k]||'').toString().toLowerCase();
@@ -885,6 +955,7 @@ function renderTable(type) {
       <tr>
         <td class="td-mono">${r.data}</td>
         <td>${r.placa ? `<span class="td-plate">${r.placa}</span>` : `<span class="td-plate-empty">—</span>`}</td>
+        <td>${r.placaTrailer ? `<span class="td-plate" style="border-color:rgba(245,166,35,.4);background:rgba(245,166,35,.07);" title="Trailer">${r.placaTrailer} <small style="font-size:.6rem;opacity:.7;">🚛</small></span>` : `<span class="td-plate-empty">—</span>`}</td>
         <td class="td-name">${r.nome}</td>
         <td class="td-mono">${r.rg || '—'}</td>
         <td class="td-mono">${r.cpf || '—'}</td>
@@ -1028,7 +1099,8 @@ function editRow(type, id) {
     document.getElementById('modal-body').innerHTML = `
       <div class="form-grid">
         <div class="form-group"><label>Data</label><input type="date" id="m-data" value="${dateVal}"></div>
-        <div class="form-group"><label>Placa</label><input id="m-placa" value="${r.placa||''}"></div>
+        <div class="form-group"><label>Placa Veículo</label><input id="m-placa" value="${r.placa||''}"></div>
+        <div class="form-group"><label>Placa Trailer</label><input id="m-placa-trailer" value="${r.placaTrailer||''}" placeholder="Quando aplicável"></div>
         <div class="form-group half"><label>Nome</label><input id="m-nome" value="${r.nome||''}"></div>
         <div class="form-group"><label>RG</label><input id="m-rg" value="${r.rg||''}"></div>
         <div class="form-group"><label>CPF</label><input id="m-cpf" value="${r.cpf||''}"></div>
@@ -1058,7 +1130,8 @@ document.getElementById('modal-save-btn').onclick = async function() {
   if (type === 'cadastro') {
     updates.motivo = document.getElementById('m-motivo').value;
   } else {
-    updates.placa   = document.getElementById('m-placa').value.trim().toUpperCase();
+    updates.placa        = document.getElementById('m-placa').value.trim().toUpperCase();
+    updates.placaTrailer = document.getElementById('m-placa-trailer').value.trim().toUpperCase();
     updates.entrada = document.getElementById('m-entrada').value;
     updates.saida   = document.getElementById('m-saida').value;
     const dv = document.getElementById('m-data').value;
@@ -1091,10 +1164,10 @@ function exportCSV(type) {
   const data = filtered[type];
   const headers = type === 'cadastro'
     ? ['NOME','RG','CPF','CARGO','EMPRESA','MOTIVO']
-    : ['DATA','PLACA','NOME','RG','CPF','CARGO','EMPRESA','ENTRADA','SAIDA'];
+    : ['DATA','PLACA','PLACA_TRAILER','NOME','RG','CPF','CARGO','EMPRESA','ENTRADA','SAIDA'];
   const keys = type === 'cadastro'
     ? ['nome','rg','cpf','cargo','empresa','motivo']
-    : ['data','placa','nome','rg','cpf','cargo','empresa','entrada','saida'];
+    : ['data','placa','placaTrailer','nome','rg','cpf','cargo','empresa','entrada','saida'];
   const csv = [headers.join(';'), ...data.map(r => keys.map(k => `"${(r[k]||'').replace(/"/g,'""')}"`).join(';'))].join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' }));
@@ -1102,6 +1175,79 @@ function exportCSV(type) {
   a.click();
   showToast('📥 CSV exportado com sucesso!');
 }
+
+// ═══════════════════════════════════════════════════════════════
+// AUTOCOMPLETE — busca no banco de cadastros
+// ═══════════════════════════════════════════════════════════════
+let acHighlight = -1;
+
+function acSearch(val) {
+  const list = document.getElementById('ac-list');
+  const q = val.trim().toLowerCase();
+  if (!q || q.length < 2) { acClose(); return; }
+
+  const results = db.cadastro.filter(r =>
+    (r.nome||'').toLowerCase().includes(q) ||
+    (r.rg||'').toLowerCase().includes(q) ||
+    (r.cpf||'').toLowerCase().includes(q)
+  ).slice(0, 8);
+
+  if (!results.length) { acClose(); return; }
+
+  acHighlight = -1;
+  list.innerHTML = results.map((r, i) => `
+    <div class="autocomplete-item" data-idx="${i}" onmousedown="acSelect(${i})">
+      <span class="ac-name">${r.nome}<span class="ac-badge">${r.motivo||''}</span></span>
+      <span class="ac-meta">${[r.rg ? 'RG: '+r.rg : '', r.cpf ? 'CPF: '+r.cpf : '', r.empresa||''].filter(Boolean).join(' · ')}</span>
+    </div>`).join('');
+  list._results = results;
+  list.classList.add('open');
+}
+
+function acSelect(idx) {
+  const list = document.getElementById('ac-list');
+  const r = (list._results || [])[idx];
+  if (!r) return;
+  document.getElementById('d-nome').value    = r.nome || '';
+  document.getElementById('d-rg').value      = r.rg   || '';
+  document.getElementById('d-cpf').value     = r.cpf  || '';
+  document.getElementById('d-cargo').value   = r.cargo || '';
+  document.getElementById('d-empresa').value = r.empresa || '';
+  acClose();
+  showToast(`✅ Cadastro de ${r.nome.split(' ')[0]} carregado!`);
+}
+
+function acClose() {
+  const list = document.getElementById('ac-list');
+  if (list) { list.classList.remove('open'); list.innerHTML = ''; }
+  acHighlight = -1;
+}
+
+function acKeyNav(e) {
+  const list = document.getElementById('ac-list');
+  if (!list.classList.contains('open')) return;
+  const items = list.querySelectorAll('.autocomplete-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    acHighlight = Math.min(acHighlight + 1, items.length - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    acHighlight = Math.max(acHighlight - 1, -1);
+  } else if (e.key === 'Enter' && acHighlight >= 0) {
+    e.preventDefault();
+    acSelect(acHighlight);
+    return;
+  } else if (e.key === 'Escape') {
+    acClose(); return;
+  }
+  items.forEach((el, i) => el.classList.toggle('highlighted', i === acHighlight));
+}
+
+// Close autocomplete when clicking outside
+document.addEventListener('mousedown', function(e) {
+  const wrap = document.querySelector('.autocomplete-wrap');
+  if (wrap && !wrap.contains(e.target)) acClose();
+});
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
