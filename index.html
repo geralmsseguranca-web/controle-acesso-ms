@@ -369,6 +369,127 @@
     text-transform: uppercase;
   }
 
+  /* ── Quick Search Panel ── */
+  .quick-search-panel {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 1.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .quick-search-panel::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--success), var(--accent));
+    background-size: 200%;
+    animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+  .qs-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem; letter-spacing: .08em;
+    color: var(--accent); margin-bottom: 1rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .qs-row {
+    display: flex; gap: .6rem; align-items: center; flex-wrap: wrap;
+  }
+  .qs-type-btns {
+    display: flex; gap: .35rem; flex-shrink: 0;
+  }
+  .qs-type-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .75rem; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase;
+    padding: .5rem .9rem;
+    border: 1px solid var(--border);
+    border-radius: 8px; background: var(--surface);
+    color: var(--muted); cursor: pointer;
+    transition: all .15s;
+  }
+  .qs-type-btn.active {
+    background: rgba(245,166,35,.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .qs-type-btn:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+  .qs-input-wrap {
+    position: relative; flex: 1; min-width: 220px;
+  }
+  .qs-input-wrap input {
+    padding-left: 2.4rem;
+    font-size: .95rem;
+    height: 42px;
+  }
+  .qs-input-icon {
+    position: absolute; left: .85rem; top: 50%;
+    transform: translateY(-50%); font-size: .95rem;
+    color: var(--muted); pointer-events: none;
+  }
+  .qs-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .85rem; font-weight: 600;
+    padding: .55rem 1.2rem; border-radius: 8px;
+    border: none; cursor: pointer;
+    background: var(--accent); color: #0d0f14;
+    transition: all .15s; white-space: nowrap;
+    display: flex; align-items: center; gap: .4rem;
+  }
+  .qs-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  /* Results list */
+  .qs-results {
+    margin-top: 1rem;
+    display: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .qs-results.open { display: block; }
+  .qs-result-item {
+    display: flex; align-items: center;
+    gap: .75rem;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .qs-result-item:last-child { border-bottom: none; }
+  .qs-result-item:hover { background: var(--highlight); }
+  .qs-result-info { flex: 1; min-width: 0; }
+  .qs-result-name { font-weight: 600; font-size: .9rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qs-result-meta { font-size: .74rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: .15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qs-result-motivo { font-size: .65rem; background: rgba(245,166,35,.12); color: var(--accent); border: 1px solid rgba(245,166,35,.25); border-radius: 10px; padding: .1rem .45rem; margin-left: .4rem; }
+  .qs-action-btns { display: flex; gap: .5rem; flex-shrink: 0; }
+  .qs-btn-entrada {
+    font-size: .78rem; font-weight: 700;
+    letter-spacing: .05em; padding: .4rem .85rem;
+    border-radius: 7px; border: none; cursor: pointer;
+    background: rgba(61,186,124,.15);
+    color: var(--success);
+    border: 1px solid rgba(61,186,124,.35);
+    transition: all .15s; white-space: nowrap;
+  }
+  .qs-btn-entrada:hover { background: rgba(61,186,124,.3); transform: translateY(-1px); }
+  .qs-btn-saida {
+    font-size: .78rem; font-weight: 700;
+    letter-spacing: .05em; padding: .4rem .85rem;
+    border-radius: 7px; border: none; cursor: pointer;
+    background: rgba(245,166,35,.12);
+    color: var(--accent);
+    border: 1px solid rgba(245,166,35,.3);
+    transition: all .15s; white-space: nowrap;
+  }
+  .qs-btn-saida:hover { background: rgba(245,166,35,.25); transform: translateY(-1px); }
+  .qs-btn-saida:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  .qs-no-results { padding: 1.25rem; text-align: center; color: var(--muted); font-size: .85rem; background: var(--surface); }
+  .qs-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-left: .25rem; }
+  .qs-status-in  { background: var(--success); box-shadow: 0 0 6px var(--success); animation: pulse-g 2s infinite; }
+  .qs-status-out { background: var(--muted); }
+  @keyframes pulse-g { 0%,100%{opacity:1} 50%{opacity:.5} }
+
   /* ── Responsive ── */
   @media (max-width: 640px) {
     header { padding: 0 1rem; }
@@ -493,6 +614,25 @@
   <!-- ══ ABA 2: REGISTRO DE ACESSOS ══ -->
   <div id="panel-dados" class="tab-panel">
     <div class="stats-row" id="stats-dados"></div>
+
+    <!-- ── PAINEL DE BUSCA RÁPIDA ── -->
+    <div class="quick-search-panel">
+      <div class="qs-title">⚡ Busca Rápida por Cadastro</div>
+      <div class="qs-row">
+        <div class="qs-type-btns">
+          <button class="qs-type-btn active" onclick="setQsType('nome',this)">Nome</button>
+          <button class="qs-type-btn" onclick="setQsType('rg',this)">RG</button>
+          <button class="qs-type-btn" onclick="setQsType('cpf',this)">CPF</button>
+        </div>
+        <div class="qs-input-wrap">
+          <span class="qs-input-icon">🔍</span>
+          <input type="text" id="qs-input" placeholder="Digite para buscar no cadastro..."
+            oninput="qsSearch()" onkeydown="if(event.key==='Enter') qsSearch()" autocomplete="off">
+        </div>
+        <button class="qs-btn" onclick="qsSearch()">🔎 Buscar</button>
+      </div>
+    </div><!-- end quick-search-panel -->
+
     <div class="form-card">
       <div class="form-card-title">🚗 Registrar Novo Acesso</div>
       <div class="form-grid">
@@ -1248,6 +1388,123 @@ document.addEventListener('mousedown', function(e) {
   const wrap = document.querySelector('.autocomplete-wrap');
   if (wrap && !wrap.contains(e.target)) acClose();
 });
+
+// ═══════════════════════════════════════════════════════════════
+// QUICK SEARCH — busca rápida por Nome/RG/CPF com botões Entrada/Saída
+// ═══════════════════════════════════════════════════════════════
+let qsType = 'nome';
+
+function setQsType(type, btn) {
+  qsType = type;
+  document.querySelectorAll('.qs-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const input = document.getElementById('qs-input');
+  const placeholders = { nome: 'Digite o nome...', rg: 'Digite o RG...', cpf: 'Digite o CPF...' };
+  input.placeholder = placeholders[type];
+  input.focus();
+  qsSearch();
+}
+
+function qsSearch() {
+  const q = document.getElementById('qs-input').value.trim().toLowerCase();
+  const wrap = document.getElementById('qs-results');
+  if (!q || q.length < 2) { wrap.classList.remove('open'); wrap.innerHTML = ''; return; }
+
+  const results = db.cadastro.filter(r => {
+    if (qsType === 'nome') return (r.nome||'').toLowerCase().includes(q);
+    if (qsType === 'rg')   return (r.rg||'').toLowerCase().includes(q);
+    if (qsType === 'cpf')  return (r.cpf||'').toLowerCase().replace(/\D/g,'').includes(q.replace(/\D/g,''));
+    return false;
+  }).slice(0, 12);
+
+  if (!results.length) {
+    wrap.innerHTML = `<div class="qs-no-results">Nenhum cadastro encontrado para "${q}"</div>`;
+    wrap.classList.add('open');
+    return;
+  }
+
+  // For each person, find if they have an open access today
+  const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/');
+
+  wrap.innerHTML = results.map((r, i) => {
+    // Find most recent access record for this person today (by nome, case-insensitive)
+    const accessToday = db.dados.filter(d =>
+      (d.nome||'').toUpperCase() === (r.nome||'').toUpperCase() && d.data === hoje
+    ).sort((a,b) => (b._createdAt||0) - (a._createdAt||0));
+    const lastAccess = accessToday[0];
+    const isDentro = lastAccess && lastAccess.entrada && !lastAccess.saida;
+    const hasSaidaHoje = lastAccess && lastAccess.entrada && lastAccess.saida;
+
+    return `
+    <div class="qs-result-item">
+      <div class="qs-status-dot ${isDentro ? 'qs-status-in' : 'qs-status-out'}" title="${isDentro ? 'Dentro agora' : 'Fora'}"></div>
+      <div class="qs-result-info">
+        <div class="qs-result-name">
+          ${r.nome}
+          <span class="qs-result-motivo">${r.motivo||''}</span>
+        </div>
+        <div class="qs-result-meta">
+          ${[r.rg ? 'RG: '+r.rg : '', r.cpf ? 'CPF: '+r.cpf : '', r.empresa||'', r.cargo||''].filter(Boolean).join(' · ')}
+          ${isDentro ? ` <span style="color:var(--success)">● Entrou ${lastAccess.entrada}</span>` : ''}
+          ${hasSaidaHoje && !isDentro ? ` <span style="color:var(--muted)">Saiu ${lastAccess.saida}</span>` : ''}
+        </div>
+      </div>
+      <div class="qs-action-btns">
+        <button class="qs-btn-entrada" onclick="qsRegistrarEntrada('${r._id}')" ${isDentro ? 'disabled style="opacity:.35;cursor:not-allowed"' : ''} title="Registrar Entrada">
+          🟢 Entrada
+        </button>
+        <button class="qs-btn-saida" onclick="qsRegistrarSaida('${lastAccess ? lastAccess._id : ''}')" ${!isDentro ? 'disabled' : ''} title="Registrar Saída">
+          🚪 Saída
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap._results = results;
+  wrap.classList.add('open');
+}
+
+async function qsRegistrarEntrada(cadastroId) {
+  const r = db.cadastro.find(x => x._id === cadastroId);
+  if (!r) return;
+  const now = new Date();
+  const hoje = now.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/');
+  const entrada = now.toTimeString().slice(0,5);
+
+  try {
+    await addToFirestore('dados', {
+      data:    hoje,
+      nome:    r.nome,
+      rg:      r.rg || '',
+      cpf:     r.cpf || '',
+      cargo:   r.cargo || '',
+      empresa: r.empresa || '',
+      placa:   '',
+      placaTrailer: '',
+      entrada,
+      saida:   '',
+    });
+    showToast(`🟢 Entrada de ${r.nome.split(' ')[0]} registrada: ${entrada}`);
+    setTimeout(qsSearch, 600); // refresh results
+  } catch(e) {
+    showToast('❌ Erro: ' + e.message, 'error');
+  }
+}
+
+async function qsRegistrarSaida(dadoId) {
+  if (!dadoId) { showToast('Nenhum acesso aberto encontrado.', 'error'); return; }
+  const r = db.dados.find(x => x._id === dadoId);
+  if (!r) return;
+  if (r.saida) { showToast('Saída já registrada.', 'error'); return; }
+  const saida = new Date().toTimeString().slice(0,5);
+  try {
+    await updateInFirestore('dados', dadoId, { saida });
+    showToast(`🚪 Saída de ${r.nome.split(' ')[0]} registrada: ${saida}`);
+    setTimeout(qsSearch, 600);
+  } catch(e) {
+    showToast('❌ Erro: ' + e.message, 'error');
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
