@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Acesso — Portaria</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK v10 (modular via compat CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #13161e;
+    --card:      #191d28;
+    --border:    #252b3a;
+    --accent:    #f5a623;
+    --accent2:   #e8891a;
+    --danger:    #e05555;
+    --success:   #3dba7c;
+    --text:      #e8eaf0;
+    --muted:     #7a8099;
+    --highlight: #252d42;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,.5);
+  }
+  .logo { display: flex; align-items: center; gap: .75rem; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+  }
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.35rem;
+    letter-spacing: .08em;
+    color: var(--text);
+  }
+  .logo-text span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  #live-clock {
+    font-family: 'DM Mono', monospace;
+    font-size: .9rem;
+    color: var(--muted);
+    background: var(--card);
+    padding: .35rem .75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .badge-status {
+    background: rgba(61,186,124,.15);
+    color: var(--success);
+    border: 1px solid rgba(61,186,124,.3);
+    padding: .3rem .8rem;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  .badge-status.offline {
+    background: rgba(224,85,85,.15);
+    color: var(--danger);
+    border-color: rgba(224,85,85,.3);
+  }
+
+  /* ── Loading overlay ── */
+  #loading-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999;
+    gap: 1rem;
+    transition: opacity .4s;
+  }
+  #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .loading-spinner {
+    width: 48px; height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: .1em;
+    color: var(--muted);
+  }
+
+  /* ── Main ── */
+  main { max-width: 1300px; margin: 2rem auto; padding: 0 1.5rem 4rem; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex; gap: .25rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border);
+  }
+  .tab-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem; font-weight: 600;
+    letter-spacing: .04em; text-transform: uppercase;
+    padding: .75rem 1.5rem;
+    background: transparent; border: none;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color .2s, border-color .2s;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn .tab-count {
+    background: var(--highlight); color: var(--muted);
+    font-size: .7rem; padding: .15rem .45rem;
+    border-radius: 10px; font-weight: 500;
+  }
+  .tab-btn.active .tab-count {
+    background: rgba(245,166,35,.15); color: var(--accent);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex; align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem; letter-spacing: .06em; color: var(--text);
+  }
+  .section-title span { color: var(--accent); }
+  .section-sub { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
+
+  /* ── Form card ── */
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative; overflow: hidden;
+  }
+  .form-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .form-card-title {
+    font-size: .75rem; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem 1.25rem;
+  }
+  .form-group { display: flex; flex-direction: column; gap: .4rem; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group.half { grid-column: span 2; }
+
+  label {
+    font-size: .72rem; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  }
+  label .req { color: var(--accent); margin-left: 2px; }
+
+  input, select, textarea {
+    font-family: 'DM Sans', sans-serif; font-size: .9rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    padding: .6rem .9rem; outline: none;
+    transition: border-color .2s, box-shadow .2s; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(245,166,35,.12);
+  }
+  input::placeholder { color: var(--muted); opacity: .6; }
+  select { cursor: pointer; }
+  select option { background: var(--card); }
+
+  /* ── Buttons ── */
+  .btn-row { display: flex; gap: .75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .85rem; font-weight: 600;
+    letter-spacing: .04em; padding: .65rem 1.4rem;
+    border: none; border-radius: 8px; cursor: pointer;
+    transition: all .18s; display: flex; align-items: center; gap: .5rem;
+  }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #0d0f14; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,166,35,.3); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: rgba(224,85,85,.12); border: 1px solid rgba(224,85,85,.3); color: var(--danger); }
+  .btn-danger:hover { background: rgba(224,85,85,.25); }
+
+  /* ── Filter bar ── */
+  .filter-bar { display: flex; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap input { padding-left: 2.5rem; }
+  .search-icon { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .9rem; pointer-events: none; }
+  .filter-select { min-width: 150px; flex: 0 0 auto; }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 800px; }
+  thead { background: var(--surface); position: sticky; top: 0; }
+  th {
+    font-size: .7rem; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); padding: .9rem 1rem;
+    text-align: left; border-bottom: 1px solid var(--border);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--accent); }
+  th .sort-icon { opacity: .4; margin-left: .3rem; }
+  td {
+    padding: .8rem 1rem; border-bottom: 1px solid var(--border);
+    color: var(--text); max-width: 220px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--highlight); }
+  .td-name { font-weight: 500; }
+  .td-mono { font-family: 'DM Mono', monospace; font-size: .8rem; color: var(--muted); }
+  .td-plate {
+    font-family: 'DM Mono', monospace; font-size: .78rem;
+    background: var(--highlight); border: 1px solid var(--border);
+    border-radius: 4px; padding: .15rem .5rem;
+    display: inline-block; letter-spacing: .1em; font-weight: 500;
+  }
+  .td-plate-empty { color: var(--muted); font-size: .8rem; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .2rem .6rem; border-radius: 20px;
+    font-size: .72rem; font-weight: 600; letter-spacing: .04em;
+  }
+  .badge-in  { background: rgba(61,186,124,.12); color: var(--success); border: 1px solid rgba(61,186,124,.25); }
+  .badge-out { background: rgba(122,128,153,.1);  color: var(--muted);   border: 1px solid var(--border); }
+  .badge-open{ background: rgba(245,166,35,.12);  color: var(--accent);  border: 1px solid rgba(245,166,35,.25); }
+
+  .action-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); padding: .25rem .55rem;
+    border-radius: 6px; cursor: pointer;
+    font-size: .8rem; transition: all .15s; margin-right: .3rem;
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .action-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* ── Stats row ── */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; position: relative; overflow: hidden; }
+  .stat-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent); opacity: .4; }
+  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: .04em; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: .72rem; color: var(--muted); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; margin-top: .35rem; }
+
+  /* ── Pagination ── */
+  .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: .5rem; }
+  .page-info { font-size: .8rem; color: var(--muted); }
+  .page-btns { display: flex; gap: .4rem; }
+  .page-btn {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--muted); padding: .35rem .65rem; border-radius: 6px;
+    cursor: pointer; font-size: .8rem;
+    font-family: 'DM Mono', monospace; transition: all .15s;
+  }
+  .page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Modal ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; width: min(560px, 95vw); position: relative; animation: slideUp .22s ease; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; transition: color .15s; }
+  .modal-close:hover { color: var(--danger); }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: .06em; margin-bottom: 1.5rem; color: var(--text); }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--card); border: 1px solid var(--border);
+    border-left: 4px solid var(--success); border-radius: 10px;
+    padding: .9rem 1.4rem; color: var(--text);
+    font-size: .85rem; font-weight: 500; z-index: 300;
+    transform: translateX(120%); transition: transform .3s ease;
+    min-width: 240px; box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  }
+  #toast.show { transform: translateX(0); }
+  #toast.error { border-left-color: var(--danger); }
+
+  /* ── Empty state ── */
+  .empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+  .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: .4; }
+  .empty-text { font-size: .9rem; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    header { padding: 0 1rem; }
+    .logo-text { font-size: 1.1rem; }
+    main { padding: 0 1rem 4rem; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.half { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Conectando ao Banco de Dados...</div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🔐</div>
+    <div>
+      <div class="logo-text">CONTROLE DE <span>ACESSO</span></div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="live-clock">--:--:--</div>
+    <div class="badge-status" id="conn-badge">● Conectando...</div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('cadastro', this)">
+      <span>📋</span> Primeiro Cadastro
+      <span class="tab-count" id="cnt-cadastro">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('dados', this)">
+      <span>📊</span> Registro de Acessos
+      <span class="tab-count" id="cnt-dados">0</span>
+    </button>
+  </div>
+
+  <!-- ══ ABA 1: PRIMEIRO CADASTRO ══ -->
+  <div id="panel-cadastro" class="tab-panel active">
+    <div class="stats-row" id="stats-cadastro"></div>
+    <div class="form-card">
+      <div class="form-card-title">➕ Novo Cadastro de Visitante</div>
+      <div class="form-grid">
+        <div class="form-group half">
+          <label>Nome Completo <span class="req">*</span></label>
+          <input type="text" id="c-nome" placeholder="Nome do visitante" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>RG</label>
+          <input type="text" id="c-rg" placeholder="00.000.000-0">
+        </div>
+        <div class="form-group">
+          <label>CPF</label>
+          <input type="text" id="c-cpf" placeholder="000.000.000-00">
+        </div>
+        <div class="form-group half">
+          <label>Cargo / Função</label>
+          <input type="text" id="c-cargo" placeholder="Ex: Motorista, Prestador...">
+        </div>
+        <div class="form-group">
+          <label>Empresa</label>
+          <input type="text" id="c-empresa" placeholder="Nome da empresa">
+        </div>
+        <div class="form-group">
+          <label>Motivo de Entrada <span class="req">*</span></label>
+          <select id="c-motivo">
+            <option value="">Selecione...</option>
+            <option>PRESTADOR</option><option>ENTREGA</option><option>COLETA</option>
+            <option>VISITANTE</option><option>DESCARGA</option><option>ENTREVISTA</option>
+            <option>MANUTENÇÃO</option><option>FUNCIONÁRIO</option><option>OUTRO</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-save-cadastro" onclick="addCadastro()">💾 Salvar Cadastro</button>
+        <button class="btn btn-outline" onclick="clearForm('c')">✕ Limpar</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Buscar por nome, CPF, empresa..." oninput="filterTable('cadastro')" id="search-cadastro">
+      </div>
+      <select class="filter-select" onchange="filterTable('cadastro')" id="filt-motivo">
+        <option value="">Todos os motivos</option>
+        <option>PRESTADOR</option><option>ENTREGA</option><option>COLETA</option>
+        <option>VISITANTE</option><option>DESCARGA</option><option>ENTREVISTA</option>
+        <option>MANUTENÇÃO</option><option>FUNCIONÁRIO</option><option>OUTRO</option>
+      </select>
+      <button class="btn btn-outline" onclick="exportCSV('cadastro')">⬇ Exportar CSV</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tbl-cadastro">
+        <thead>
+          <tr>
+            <th onclick="sortTable('cadastro',0)">Nome <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('cadastro',1)">RG <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('cadastro',2)">CPF <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('cadastro',3)">Cargo / Função <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('cadastro',4)">Empresa <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('cadastro',5)">Motivo Entrada <span class="sort-icon">↕</span></th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-cadastro"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pg-cadastro"></div>
+  </div>
+
+  <!-- ══ ABA 2: REGISTRO DE ACESSOS ══ -->
+  <div id="panel-dados" class="tab-panel">
+    <div class="stats-row" id="stats-dados"></div>
+    <div class="form-card">
+      <div class="form-card-title">🚗 Registrar Novo Acesso</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Data <span class="req">*</span></label>
+          <input type="date" id="d-data">
+        </div>
+        <div class="form-group">
+          <label>Placa do Veículo</label>
+          <input type="text" id="d-placa" placeholder="Ex: ABC-1234" maxlength="10">
+        </div>
+        <div class="form-group half">
+          <label>Nome Completo <span class="req">*</span></label>
+          <input type="text" id="d-nome" placeholder="Nome do visitante">
+        </div>
+        <div class="form-group">
+          <label>RG</label>
+          <input type="text" id="d-rg" placeholder="00.000.000-0">
+        </div>
+        <div class="form-group">
+          <label>CPF</label>
+          <input type="text" id="d-cpf" placeholder="000.000.000-00">
+        </div>
+        <div class="form-group">
+          <label>Cargo / Função</label>
+          <input type="text" id="d-cargo" placeholder="Ex: Motorista">
+        </div>
+        <div class="form-group">
+          <label>Empresa</label>
+          <input type="text" id="d-empresa" placeholder="Nome da empresa">
+        </div>
+        <div class="form-group">
+          <label>Horário de Entrada</label>
+          <input type="time" id="d-entrada">
+        </div>
+        <div class="form-group">
+          <label>Horário de Saída</label>
+          <input type="time" id="d-saida">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-save-dados" onclick="addDado()">✅ Registrar Acesso</button>
+        <button class="btn btn-outline" onclick="clearForm('d')">✕ Limpar</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Buscar por nome, placa, empresa..." oninput="filterTable('dados')" id="search-dados">
+      </div>
+      <input type="date" id="filt-data-inicio" onchange="filterTable('dados')" title="Data inicial" style="flex:0 0 auto;min-width:150px;">
+      <input type="date" id="filt-data-fim" onchange="filterTable('dados')" title="Data final" style="flex:0 0 auto;min-width:150px;">
+      <button class="btn btn-outline" onclick="exportCSV('dados')">⬇ Exportar CSV</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tbl-dados">
+        <thead>
+          <tr>
+            <th onclick="sortTable('dados',0)">Data <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',1)">Placa <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',2)">Nome <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',3)">RG <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',4)">CPF <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',5)">Cargo <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',6)">Empresa <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',7)">Entrada <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('dados',8)">Saída <span class="sort-icon">↕</span></th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-dados"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pg-dados"></div>
+  </div>
+</main>
+
+<!-- ══ MODAL (edit) ══ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modal-title">Editar Registro</div>
+    <div id="modal-body"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="modal-save-btn">💾 Salvar</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE CONFIG — Substitua com suas credenciais do Firebase
+// ═══════════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyCc2LVo76D5aoAhnAfI65ZWpxZwWdzsfZg",
+  authDomain:        "controle-de-acesso-a14c0.firebaseapp.com",
+  projectId:         "controle-de-acesso-a14c0",
+  storageBucket:     "controle-de-acesso-a14c0.firebasestorage.app",
+  messagingSenderId: "932118333812",
+  appId:             "1:932118333812:web:94de690a025f2698b60421"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db_fire = firebase.firestore();
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let db = { cadastro: [], dados: [] };
+let filtered = { cadastro: [], dados: [] };
+let sortState = { cadastro: { col: -1, asc: true }, dados: { col: -1, asc: true } };
+const PAGE_SIZE = 12;
+let pages = { cadastro: 1, dados: 1 };
+let editContext = null;
+let unsubscribers = {};
+
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE — REAL-TIME LISTENERS
+// ═══════════════════════════════════════════════════════════════
+const CONFIG_KEYS = ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'];
+const PLACEHOLDER = 'COLE_SUA_API_KEY_AQUI';
+
+function isConfigured() {
+  return firebaseConfig.apiKey && firebaseConfig.apiKey !== PLACEHOLDER && firebaseConfig.projectId && !firebaseConfig.projectId.includes('SEU_PROJETO');
+}
+
+function showConfigWarning() {
+  const overlay = document.getElementById('loading-overlay');
+  overlay.innerHTML = `
+    <div style="text-align:center;max-width:480px;padding:2rem;">
+      <div style="font-size:3rem;margin-bottom:1rem;">⚙️</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.1em;color:#f5a623;margin-bottom:.75rem;">
+        CONFIGURAÇÃO NECESSÁRIA
+      </div>
+      <div style="color:#7a8099;font-size:.9rem;line-height:1.6;margin-bottom:1.5rem;">
+        O Firebase ainda não está configurado.<br>
+        Abra o arquivo <code style="background:#252b3a;padding:.2rem .5rem;border-radius:4px;color:#e8eaf0;">index.html</code>,
+        localize o bloco <code style="background:#252b3a;padding:.2rem .5rem;border-radius:4px;color:#e8eaf0;">firebaseConfig</code>
+        no início do &lt;script&gt; e substitua com as credenciais do seu projeto Firebase.
+      </div>
+      <div style="background:#13161e;border:1px solid #252b3a;border-radius:10px;padding:1rem;text-align:left;font-family:'DM Mono',monospace;font-size:.78rem;color:#7a8099;line-height:1.8;">
+        <span style="color:#f5a623;">const</span> firebaseConfig = {<br>
+        &nbsp;&nbsp;apiKey: <span style="color:#3dba7c;">"AIzaSy..."</span>,<br>
+        &nbsp;&nbsp;authDomain: <span style="color:#3dba7c;">"projeto.firebaseapp.com"</span>,<br>
+        &nbsp;&nbsp;projectId: <span style="color:#3dba7c;">"meu-projeto"</span>,<br>
+        &nbsp;&nbsp;...<br>
+        };
+      </div>
+      <div style="margin-top:1.25rem;font-size:.8rem;color:#7a8099;">
+        📖 Consulte o <strong style="color:#e8eaf0;">README.md</strong> para instruções completas.
+      </div>
+    </div>`;
+}
+
+function hideLoading() {
+  document.getElementById('loading-overlay').classList.add('hidden');
+}
+
+function initFirebase() {
+  if (!isConfigured()) {
+    showConfigWarning();
+    // Still render the app behind the overlay with empty data
+    filterTable('cadastro');
+    filterTable('dados');
+    renderStats('cadastro');
+    renderStats('dados');
+    return;
+  }
+
+  // Safety timeout — always hide loading after 8s
+  setTimeout(hideLoading, 8000);
+
+  // Listen to 'cadastro' collection
+  unsubscribers.cadastro = db_fire.collection('cadastro')
+    .orderBy('_createdAt', 'asc')
+    .onSnapshot(snapshot => {
+      db.cadastro = snapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
+      filterTable('cadastro');
+      renderStats('cadastro');
+    }, err => {
+      console.error('Cadastro listener error:', err);
+      setOffline();
+    });
+
+  // Listen to 'dados' collection
+  unsubscribers.dados = db_fire.collection('dados')
+    .orderBy('_createdAt', 'asc')
+    .onSnapshot(snapshot => {
+      db.dados = snapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
+      filterTable('dados');
+      renderStats('dados');
+      hideLoading();
+      setOnline();
+    }, err => {
+      console.error('Dados listener error:', err);
+      setOffline();
+    });
+}
+
+function setOnline() {
+  const badge = document.getElementById('conn-badge');
+  badge.textContent = '● Sistema Ativo';
+  badge.className = 'badge-status';
+}
+function setOffline() {
+  const badge = document.getElementById('conn-badge');
+  badge.textContent = '⚠ Sem Conexão';
+  badge.className = 'badge-status offline';
+  hideLoading();
+}
+
+async function addToFirestore(collection, data) {
+  data._createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  const ref = await db_fire.collection(collection).add(data);
+  return ref.id;
+}
+
+async function updateInFirestore(collection, id, data) {
+  await db_fire.collection(collection).doc(id).update(data);
+}
+
+async function deleteFromFirestore(collection, id) {
+  await db_fire.collection(collection).doc(id).delete();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('live-clock').textContent =
+    now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' }) +
+    ' — ' + now.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Set default date
+document.getElementById('d-data').value = new Date().toISOString().split('T')[0];
+
+// ═══════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type === 'error' ? 'error show' : 'show';
+  setTimeout(() => { t.className = type === 'error' ? 'error' : ''; }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADD CADASTRO
+// ═══════════════════════════════════════════════════════════════
+async function addCadastro() {
+  const nome = document.getElementById('c-nome').value.trim().toUpperCase();
+  const motivo = document.getElementById('c-motivo').value;
+  if (!nome)   { showToast('Preencha o Nome Completo', 'error'); return; }
+  if (!motivo) { showToast('Selecione o Motivo de Entrada', 'error'); return; }
+
+  const btn = document.getElementById('btn-save-cadastro');
+  btn.disabled = true; btn.textContent = '⏳ Salvando...';
+
+  try {
+    await addToFirestore('cadastro', {
+      nome, motivo,
+      rg:      document.getElementById('c-rg').value.trim(),
+      cpf:     document.getElementById('c-cpf').value.trim(),
+      cargo:   document.getElementById('c-cargo').value.trim().toUpperCase(),
+      empresa: document.getElementById('c-empresa').value.trim().toUpperCase(),
+    });
+    clearForm('c');
+    showToast('✅ Cadastro registrado com sucesso!');
+  } catch(e) {
+    showToast('❌ Erro ao salvar: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Salvar Cadastro';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADD DADO
+// ═══════════════════════════════════════════════════════════════
+async function addDado() {
+  const nome = document.getElementById('d-nome').value.trim().toUpperCase();
+  const data = document.getElementById('d-data').value;
+  if (!nome) { showToast('Preencha o Nome Completo', 'error'); return; }
+  if (!data) { showToast('Informe a Data', 'error'); return; }
+
+  const [y,m,d2] = data.split('-');
+  const btn = document.getElementById('btn-save-dados');
+  btn.disabled = true; btn.textContent = '⏳ Salvando...';
+
+  try {
+    await addToFirestore('dados', {
+      data:    `${d2}/${m}/${y}`,
+      placa:   document.getElementById('d-placa').value.trim().toUpperCase(),
+      nome,
+      rg:      document.getElementById('d-rg').value.trim(),
+      cpf:     document.getElementById('d-cpf').value.trim(),
+      cargo:   document.getElementById('d-cargo').value.trim().toUpperCase(),
+      empresa: document.getElementById('d-empresa').value.trim().toUpperCase(),
+      entrada: document.getElementById('d-entrada').value,
+      saida:   document.getElementById('d-saida').value,
+    });
+    clearForm('d');
+    showToast('✅ Acesso registrado com sucesso!');
+  } catch(e) {
+    showToast('❌ Erro ao salvar: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '✅ Registrar Acesso';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLEAR FORM
+// ═══════════════════════════════════════════════════════════════
+function clearForm(prefix) {
+  const ids = prefix === 'c'
+    ? ['c-nome','c-rg','c-cpf','c-cargo','c-empresa','c-motivo']
+    : ['d-data','d-placa','d-nome','d-rg','d-cpf','d-cargo','d-empresa','d-entrada','d-saida'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = el.tagName === 'SELECT' ? '' : (id === 'd-data' ? new Date().toISOString().split('T')[0] : '');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILTER
+// ═══════════════════════════════════════════════════════════════
+function filterTable(type) {
+  const q = document.getElementById('search-' + type).value.toLowerCase();
+
+  if (type === 'cadastro') {
+    const motivo = document.getElementById('filt-motivo').value;
+    filtered.cadastro = db.cadastro.filter(r => {
+      const match = [r.nome,r.rg,r.cpf,r.cargo,r.empresa,r.motivo].join(' ').toLowerCase().includes(q);
+      return match && (!motivo || r.motivo === motivo);
+    });
+  } else {
+    const di = document.getElementById('filt-data-inicio').value;
+    const df = document.getElementById('filt-data-fim').value;
+    filtered.dados = db.dados.filter(r => {
+      const match = [r.nome,r.placa,r.cpf,r.empresa,r.cargo].join(' ').toLowerCase().includes(q);
+      let dateOk = true;
+      if ((di || df) && r.data) {
+        const [d2,m2,y2] = r.data.split('/');
+        const rDate = new Date(`${y2}-${m2}-${d2}`);
+        if (di && rDate < new Date(di)) dateOk = false;
+        if (df && rDate > new Date(df)) dateOk = false;
+      }
+      return match && dateOk;
+    });
+  }
+  pages[type] = 1;
+  renderTable(type);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SORT
+// ═══════════════════════════════════════════════════════════════
+function sortTable(type, col) {
+  const s = sortState[type];
+  if (s.col === col) s.asc = !s.asc; else { s.col = col; s.asc = true; }
+  const keys = type === 'cadastro'
+    ? ['nome','rg','cpf','cargo','empresa','motivo']
+    : ['data','placa','nome','rg','cpf','cargo','empresa','entrada','saida'];
+  const k = keys[col];
+  filtered[type].sort((a,b) => {
+    const va = (a[k]||'').toString().toLowerCase();
+    const vb = (b[k]||'').toString().toLowerCase();
+    return s.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  renderTable(type);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER TABLE
+// ═══════════════════════════════════════════════════════════════
+function renderTable(type) {
+  const data = filtered[type];
+  const pg = pages[type];
+  const start = (pg-1)*PAGE_SIZE;
+  const slice = data.slice(start, start + PAGE_SIZE);
+  const tbody = document.getElementById('tbody-' + type);
+
+  document.getElementById('cnt-' + type).textContent = data.length;
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="20"><div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-text">Nenhum registro encontrado.</div></div></td></tr>`;
+    document.getElementById('pg-' + type).innerHTML = '';
+    return;
+  }
+
+  if (type === 'cadastro') {
+    tbody.innerHTML = slice.map((r,i) => `
+      <tr>
+        <td class="td-name">${r.nome}</td>
+        <td class="td-mono">${r.rg || '—'}</td>
+        <td class="td-mono">${r.cpf || '—'}</td>
+        <td>${r.cargo || '—'}</td>
+        <td>${r.empresa || '—'}</td>
+        <td>${motivoBadge(r.motivo)}</td>
+        <td>
+          <button class="action-btn" title="Editar" onclick="editRow('cadastro','${r._id}')">✏️</button>
+          <button class="action-btn del" title="Excluir" onclick="deleteRow('cadastro','${r._id}')">🗑</button>
+        </td>
+      </tr>`).join('');
+  } else {
+    tbody.innerHTML = slice.map((r,i) => `
+      <tr>
+        <td class="td-mono">${r.data}</td>
+        <td>${r.placa ? `<span class="td-plate">${r.placa}</span>` : `<span class="td-plate-empty">—</span>`}</td>
+        <td class="td-name">${r.nome}</td>
+        <td class="td-mono">${r.rg || '—'}</td>
+        <td class="td-mono">${r.cpf || '—'}</td>
+        <td>${r.cargo || '—'}</td>
+        <td>${r.empresa || '—'}</td>
+        <td class="td-mono">${r.entrada || '—'}</td>
+        <td class="td-mono">${r.saida || '—'}</td>
+        <td>${statusBadge(r)}</td>
+        <td>
+          <button class="action-btn" title="Registrar saída" onclick="registerSaida('${r._id}')">🚪</button>
+          <button class="action-btn" title="Editar" onclick="editRow('dados','${r._id}')">✏️</button>
+          <button class="action-btn del" title="Excluir" onclick="deleteRow('dados','${r._id}')">🗑</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  renderPagination(type, data.length);
+}
+
+function motivoBadge(m) {
+  const colors = { 'VISITANTE':'badge-in','ENTREGA':'badge-open','DESCARGA':'badge-open','COLETA':'badge-open','ENTREVISTA':'badge-in','PRESTADOR':'badge-out','MANUTENÇÃO':'badge-out','FUNCIONÁRIO':'badge-in' };
+  return `<span class="badge ${colors[m]||'badge-out'}">${m||'—'}</span>`;
+}
+function statusBadge(r) {
+  if (r.entrada && r.saida) return `<span class="badge badge-out">✓ Saiu</span>`;
+  if (r.entrada && !r.saida) return `<span class="badge badge-open">● Dentro</span>`;
+  return `<span class="badge badge-out">— —</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGINATION
+// ═══════════════════════════════════════════════════════════════
+function renderPagination(type, total) {
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const pg = pages[type];
+  const wrap = document.getElementById('pg-' + type);
+  if (totalPages <= 1) { wrap.innerHTML = ''; return; }
+  let btns = '';
+  for (let i = 1; i <= totalPages; i++) {
+    btns += `<button class="page-btn ${i===pg?'active':''}" onclick="goPage('${type}',${i})">${i}</button>`;
+  }
+  wrap.innerHTML = `
+    <div class="page-info">Exibindo ${((pg-1)*PAGE_SIZE)+1}–${Math.min(pg*PAGE_SIZE,total)} de ${total} registros</div>
+    <div class="page-btns">
+      <button class="page-btn" onclick="goPage('${type}',${pg-1})" ${pg===1?'disabled':''}>‹</button>
+      ${btns}
+      <button class="page-btn" onclick="goPage('${type}',${pg+1})" ${pg===totalPages?'disabled':''}>›</button>
+    </div>`;
+}
+function goPage(type, pg) {
+  const max = Math.ceil(filtered[type].length / PAGE_SIZE);
+  if (pg < 1 || pg > max) return;
+  pages[type] = pg;
+  renderTable(type);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════════════
+function renderStats(type) {
+  if (type === 'cadastro') {
+    const d = db.cadastro;
+    const empresas = new Set(d.map(r=>r.empresa).filter(Boolean));
+    document.getElementById('stats-cadastro').innerHTML = `
+      <div class="stat-card"><div class="stat-value">${d.length}</div><div class="stat-label">Total Cadastrados</div></div>
+      <div class="stat-card"><div class="stat-value">${d.filter(r=>r.motivo==='VISITANTE').length}</div><div class="stat-label">Visitantes</div></div>
+      <div class="stat-card"><div class="stat-value">${d.filter(r=>r.motivo==='PRESTADOR').length}</div><div class="stat-label">Prestadores</div></div>
+      <div class="stat-card"><div class="stat-value">${d.filter(r=>/ENTREGA|DESCARGA|COLETA/.test(r.motivo)).length}</div><div class="stat-label">Entregas/Descargas</div></div>
+      <div class="stat-card"><div class="stat-value">${empresas.size}</div><div class="stat-label">Empresas</div></div>`;
+  } else {
+    const d = db.dados;
+    const dentro = d.filter(r=>r.entrada && !r.saida).length;
+    const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/');
+    const hdj = d.filter(r => r.data === hoje).length;
+    document.getElementById('stats-dados').innerHTML = `
+      <div class="stat-card"><div class="stat-value">${d.length}</div><div class="stat-label">Total de Acessos</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--success)">${dentro}</div><div class="stat-label">Dentro Agora</div></div>
+      <div class="stat-card"><div class="stat-value">${hdj}</div><div class="stat-label">Acessos Hoje</div></div>
+      <div class="stat-card"><div class="stat-value">${d.filter(r=>r.placa).length}</div><div class="stat-label">Com Veículo</div></div>
+      <div class="stat-card"><div class="stat-value">${new Set(d.map(r=>r.data)).size}</div><div class="stat-label">Dias com Registro</div></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════════════════════════
+async function deleteRow(type, id) {
+  if (!confirm('Excluir este registro?')) return;
+  try {
+    await deleteFromFirestore(type, id);
+    showToast('Registro excluído.');
+  } catch(e) {
+    showToast('❌ Erro ao excluir: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REGISTER SAÍDA
+// ═══════════════════════════════════════════════════════════════
+async function registerSaida(id) {
+  const r = db.dados.find(x => x._id === id);
+  if (!r) return;
+  if (r.saida) { showToast('Saída já registrada.', 'error'); return; }
+  const now = new Date();
+  const saida = now.toTimeString().slice(0,5);
+  try {
+    await updateInFirestore('dados', id, { saida });
+    showToast(`🚪 Saída de ${r.nome.split(' ')[0]} registrada: ${saida}`);
+  } catch(e) {
+    showToast('❌ Erro: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EDIT MODAL
+// ═══════════════════════════════════════════════════════════════
+function editRow(type, id) {
+  const r = (type === 'cadastro' ? db.cadastro : db.dados).find(x => x._id === id);
+  if (!r) return;
+  editContext = { type, id };
+  document.getElementById('modal-title').textContent = type === 'cadastro' ? 'Editar Cadastro' : 'Editar Registro de Acesso';
+
+  if (type === 'cadastro') {
+    document.getElementById('modal-body').innerHTML = `
+      <div class="form-grid">
+        <div class="form-group half"><label>Nome</label><input id="m-nome" value="${r.nome||''}"></div>
+        <div class="form-group"><label>RG</label><input id="m-rg" value="${r.rg||''}"></div>
+        <div class="form-group"><label>CPF</label><input id="m-cpf" value="${r.cpf||''}"></div>
+        <div class="form-group half"><label>Cargo</label><input id="m-cargo" value="${r.cargo||''}"></div>
+        <div class="form-group"><label>Empresa</label><input id="m-empresa" value="${r.empresa||''}"></div>
+        <div class="form-group"><label>Motivo</label>
+          <select id="m-motivo">
+            ${['PRESTADOR','ENTREGA','COLETA','VISITANTE','DESCARGA','ENTREVISTA','MANUTENÇÃO','FUNCIONÁRIO','OUTRO']
+              .map(m=>`<option ${r.motivo===m?'selected':''}>${m}</option>`).join('')}
+          </select>
+        </div>
+      </div>`;
+  } else {
+    const parts = (r.data||'').split('/');
+    const dateVal = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : '';
+    document.getElementById('modal-body').innerHTML = `
+      <div class="form-grid">
+        <div class="form-group"><label>Data</label><input type="date" id="m-data" value="${dateVal}"></div>
+        <div class="form-group"><label>Placa</label><input id="m-placa" value="${r.placa||''}"></div>
+        <div class="form-group half"><label>Nome</label><input id="m-nome" value="${r.nome||''}"></div>
+        <div class="form-group"><label>RG</label><input id="m-rg" value="${r.rg||''}"></div>
+        <div class="form-group"><label>CPF</label><input id="m-cpf" value="${r.cpf||''}"></div>
+        <div class="form-group"><label>Cargo</label><input id="m-cargo" value="${r.cargo||''}"></div>
+        <div class="form-group"><label>Empresa</label><input id="m-empresa" value="${r.empresa||''}"></div>
+        <div class="form-group"><label>Entrada</label><input type="time" id="m-entrada" value="${r.entrada||''}"></div>
+        <div class="form-group"><label>Saída</label><input type="time" id="m-saida" value="${r.saida||''}"></div>
+      </div>`;
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+document.getElementById('modal-save-btn').onclick = async function() {
+  if (!editContext) return;
+  const { type, id } = editContext;
+  const btn = this;
+  btn.disabled = true; btn.textContent = '⏳ Salvando...';
+
+  const updates = {
+    nome:    document.getElementById('m-nome').value.trim().toUpperCase(),
+    rg:      document.getElementById('m-rg').value.trim(),
+    cpf:     document.getElementById('m-cpf').value.trim(),
+    cargo:   document.getElementById('m-cargo').value.trim().toUpperCase(),
+    empresa: document.getElementById('m-empresa').value.trim().toUpperCase(),
+  };
+
+  if (type === 'cadastro') {
+    updates.motivo = document.getElementById('m-motivo').value;
+  } else {
+    updates.placa   = document.getElementById('m-placa').value.trim().toUpperCase();
+    updates.entrada = document.getElementById('m-entrada').value;
+    updates.saida   = document.getElementById('m-saida').value;
+    const dv = document.getElementById('m-data').value;
+    if (dv) { const [y,m,d] = dv.split('-'); updates.data = `${d}/${m}/${y}`; }
+  }
+
+  try {
+    await updateInFirestore(type, id, updates);
+    closeModal();
+    showToast('✅ Registro atualizado!');
+  } catch(e) {
+    showToast('❌ Erro ao atualizar: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Salvar';
+  }
+};
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editContext = null;
+}
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════════════════
+function exportCSV(type) {
+  const data = filtered[type];
+  const headers = type === 'cadastro'
+    ? ['NOME','RG','CPF','CARGO','EMPRESA','MOTIVO']
+    : ['DATA','PLACA','NOME','RG','CPF','CARGO','EMPRESA','ENTRADA','SAIDA'];
+  const keys = type === 'cadastro'
+    ? ['nome','rg','cpf','cargo','empresa','motivo']
+    : ['data','placa','nome','rg','cpf','cargo','empresa','entrada','saida'];
+  const csv = [headers.join(';'), ...data.map(r => keys.map(k => `"${(r[k]||'').replace(/"/g,'""')}"`).join(';'))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' }));
+  a.download = `controle_acesso_${type}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('📥 CSV exportado com sucesso!');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+initFirebase();
+</script>
+</body>
+</html>
