@@ -1671,12 +1671,91 @@
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
-<script>
-// ─── DATA STORE ───
-let registros = JSON.parse(localStorage.getItem('ms-registros') || '[]');
+<script type="module">
+// ─── FIREBASE ───
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-function salvar() {
-  localStorage.setItem('ms-registros', JSON.stringify(registros));
+const firebaseConfig = {
+  apiKey: "AIzaSyCc2LVo76D5aoAhnAfI65ZWpxZwWdzsfZg",
+  authDomain: "controle-de-acesso-a14c0.firebaseapp.com",
+  projectId: "controle-de-acesso-a14c0",
+  storageBucket: "controle-de-acesso-a14c0.firebasestorage.app",
+  messagingSenderId: "932118333812",
+  appId: "1:932118333812:web:94de690a025f2698b60421"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const registrosCol = collection(db, 'registros');
+const configCol = collection(db, 'config');
+
+// ─── DATA STORE ───
+let registros = [];
+let firestoreDocIds = {}; // map id -> firestore doc id
+
+// Listen to real-time updates
+const q = query(registrosCol, orderBy('entrada', 'desc'));
+onSnapshot(q, (snapshot) => {
+  registros = [];
+  firestoreDocIds = {};
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    registros.push(data);
+    firestoreDocIds[data.id] = docSnap.id;
+  });
+  // Refresh UI if monitor tab is active
+  const monitorTab = document.getElementById('tab-monitor');
+  if (monitorTab && monitorTab.classList.contains('active')) atualizarMonitor();
+});
+
+async function salvar(reg) {
+  try {
+    await addDoc(registrosCol, reg);
+  } catch(e) {
+    console.error('Erro ao salvar:', e);
+    toast('❌ Erro ao salvar no servidor!', false);
+  }
+}
+
+async function salvarSaida(id, saida) {
+  const firestoreId = firestoreDocIds[id];
+  if (!firestoreId) { toast('❌ Registro não encontrado!', false); return; }
+  try {
+    await updateDoc(doc(db, 'registros', firestoreId), { saida, status: 'saiu' });
+  } catch(e) {
+    console.error('Erro ao registrar saída:', e);
+    toast('❌ Erro ao registrar saída!', false);
+  }
+}
+
+// ─── CONFIG FIREBASE ───
+async function cfgCarregarFirebase() {
+  try {
+    const snap = await getDocs(configCol);
+    if (!snap.empty) {
+      snap.forEach(docSnap => {
+        if (docSnap.id === 'dados') {
+          cfgData = docSnap.data();
+          cfgPopulateAllSelects();
+          cfgRenderListas();
+        }
+      });
+    }
+  } catch(e) { console.error('Erro ao carregar config:', e); }
+}
+
+async function cfgSalvarFirebase() {
+  try {
+    const snap = await getDocs(configCol);
+    if (snap.empty) {
+      await addDoc(configCol, { ...cfgData, _docId: 'dados' });
+    } else {
+      snap.forEach(async docSnap => {
+        await updateDoc(doc(db, 'config', docSnap.id), cfgData);
+      });
+    }
+  } catch(e) { console.error('Erro ao salvar config:', e); }
 }
 
 // ─── CLOCK ───
@@ -1725,7 +1804,7 @@ function toast(msg, ok = true) {
 const tipoEmoji = { veiculo:'🚗', colaborador:'👷', pedestre:'🚶' };
 const tipoLabel = { veiculo:'Veículo', colaborador:'Colaborador', pedestre:'Pedestre' };
 
-function registrar(tipo) {
+async function registrar(tipo) {
   let nome, empresa, cpf, rg, telefone, placa, cargo, motivo, destino, obs, doc;
 
   if (tipo === 'veiculo') {
@@ -1778,8 +1857,7 @@ function registrar(tipo) {
     saida: null,
     status: 'dentro'
   };
-  registros.unshift(reg);
-  salvar();
+  await salvar(reg);
   limpar(tipo);
   toast('✅ Entrada registrada com sucesso!');
 }
@@ -1794,15 +1872,14 @@ function limpar(tipo) {
 }
 
 // ─── REGISTRAR SAÍDA ───
-function registrarSaida(id) {
+async function registrarSaida(id) {
+  const saida = new Date().toISOString();
+  // Optimistic UI update
   const r = registros.find(x => x.id === id);
-  if (r) {
-    r.saida = new Date().toISOString();
-    r.status = 'saiu';
-    salvar();
-    atualizarMonitor();
-    toast('🚪 Saída registrada!');
-  }
+  if (r) { r.saida = saida; r.status = 'saiu'; }
+  atualizarMonitor();
+  await salvarSaida(id, saida);
+  toast('🚪 Saída registrada!');
 }
 
 // ─── MONITOR ───
@@ -2154,6 +2231,8 @@ supervisorInput.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
   if (!e.target.closest('.supervisor-search-wrap')) supervisorResults.classList.remove('show');
 });
+window.supervisorInput = supervisorInput;
+window.supervisorResults = supervisorResults;
 
 
 // ─── CONFIGURAÇÕES (Empresas, Motivos, Destinos) ────────────────────────
@@ -2164,14 +2243,14 @@ const defaultMotivos = [
   'Visita pessoal','Trabalho / Expediente','Hora Extra','Treinamento','Outro'
 ];
 
-let cfgData = JSON.parse(localStorage.getItem('ms-config') || 'null') || {
+let cfgData = {
   empresas: [],
   motivos: [...defaultMotivos],
   destinos: []
 };
 
 function cfgSalvar() {
-  localStorage.setItem('ms-config', JSON.stringify(cfgData));
+  cfgSalvarFirebase();
   cfgPopulateAllSelects();
   cfgRenderListas();
 }
@@ -2311,6 +2390,28 @@ function cfgRenderListas() {
 // Initialize on load
 cfgPopulateAllSelects();
 cfgRenderListas();
+cfgCarregarFirebase();
+
+// Make functions available globally (needed for inline onclick with module)
+window.switchTab = switchTab;
+window.switchType = switchType;
+window.registrar = registrar;
+window.limpar = limpar;
+window.registrarSaida = registrarSaida;
+window.atualizarMonitor = atualizarMonitor;
+window.buscar = buscar;
+window.exportCSV = exportCSV;
+window.exportPDF = exportPDF;
+window.supervisorSearch = supervisorSearch;
+window.supervisorSelectRecord = supervisorSelectRecord;
+window.supervisorCloseModal = supervisorCloseModal;
+window.supervisorFillAndEntry = supervisorFillAndEntry;
+window.supervisorFillAndUpdate = supervisorFillAndUpdate;
+window.cfgAddItem = cfgAddItem;
+window.cfgRemoveItem = cfgRemoveItem;
+window.cfgStartEdit = cfgStartEdit;
+window.cfgSaveEdit = cfgSaveEdit;
+window.cfgCheckOutro = cfgCheckOutro;
 
 </script>
 </body>
