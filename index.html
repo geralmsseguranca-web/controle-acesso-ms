@@ -644,6 +644,176 @@
   ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #3a6a9a; }
 
+
+  /* ─── CONFIG TAB ─── */
+  .cfg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .cfg-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cfg-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cfg-card-header.amber { background: rgba(245,158,11,0.07); border-left: 3px solid var(--amber); }
+  .cfg-card-header.teal  { background: rgba(14,165,233,0.07);  border-left: 3px solid var(--teal); }
+  .cfg-card-header.green { background: rgba(16,185,129,0.07);  border-left: 3px solid var(--green); }
+
+  .cfg-card-icon { font-size: 1.4rem; }
+
+  .cfg-card-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-bright);
+    text-transform: uppercase;
+  }
+
+  .cfg-card-sub {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .cfg-card-count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-dim);
+  }
+
+  .cfg-add-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.15);
+  }
+
+  .cfg-input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-bright);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 8px 12px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .cfg-input:focus { border-color: var(--teal-dim); box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+  .cfg-input::placeholder { color: var(--text-dim); }
+
+  .cfg-btn-add {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .amber-btn { background: var(--amber-glow); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .amber-btn:hover { background: rgba(245,158,11,0.25); }
+  .teal-btn  { background: var(--teal-glow);  color: var(--teal);  border: 1px solid rgba(14,165,233,0.3); }
+  .teal-btn:hover  { background: rgba(14,165,233,0.22); }
+  .green-btn { background: var(--green-glow); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .green-btn:hover { background: rgba(16,185,129,0.25); }
+
+  .cfg-list {
+    flex: 1;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+
+  .cfg-empty {
+    padding: 30px 18px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .cfg-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(30,45,61,0.4);
+    transition: background 0.12s;
+  }
+  .cfg-item:last-child { border-bottom: none; }
+  .cfg-item:hover { background: rgba(14,165,233,0.04); }
+
+  .cfg-item-name {
+    flex: 1;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    color: var(--text-bright);
+  }
+
+  .cfg-item-edit {
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid var(--border-glow);
+    border-radius: 4px;
+    color: var(--text-mid);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cfg-item-edit:hover { border-color: var(--teal); color: var(--teal); }
+
+  .cfg-item-del {
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 4px;
+    color: var(--red);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    opacity: 0.6;
+  }
+  .cfg-item-del:hover { background: var(--red-glow); opacity: 1; }
+
+  .cfg-item-input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--teal-dim);
+    border-radius: 4px;
+    color: var(--text-bright);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 4px 8px;
+    outline: none;
+  }
+
   /* ─── SUPERVISOR SEARCH ─── */
   .supervisor-search-wrap {
     position: relative;
@@ -1049,6 +1219,9 @@
   <button class="nav-tab" onclick="switchTab('historico', this)">
     <span class="tab-icon">📋</span> Histórico
   </button>
+  <button class="nav-tab" onclick="switchTab('configuracoes', this)">
+    <span class="tab-icon">⚙️</span> Configurações
+  </button>
 </nav>
 
 <div class="main">
@@ -1122,23 +1295,29 @@
           </div>
           <div class="field-group">
             <label>Empresa</label>
-            <input type="text" id="v-empresa" placeholder="Nome da empresa">
-          </div>
-          <div class="field-group">
-            <label>Motivo</label>
-            <select id="v-motivo">
-              <option value="">Selecione...</option>
-              <option>Entrega / Coleta</option>
-              <option>Manutenção</option>
-              <option>Reunião</option>
-              <option>Prestação de serviços</option>
-              <option>Visita pessoal</option>
-              <option>Outro</option>
+            <select id="v-empresa">
+              <option value="">Selecione ou digita abaixo...</option>
             </select>
           </div>
           <div class="field-group">
+            <label>Motivo</label>
+            <select id="v-motivo" onchange="cfgCheckOutro('v-motivo','v-motivo-outro')">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+          <div class="field-group" id="v-motivo-outro-wrap" style="display:none;">
+            <label>Motivo (digitar)</label>
+            <input type="text" id="v-motivo-outro" placeholder="Descreva o motivo...">
+          </div>
+          <div class="field-group">
             <label>Destino / Setor</label>
-            <input type="text" id="v-destino" placeholder="Ex: Bloco A / Almoxarifado">
+            <select id="v-destino" onchange="cfgCheckOutro('v-destino','v-destino-outro')">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+          <div class="field-group" id="v-destino-outro-wrap" style="display:none;">
+            <label>Destino (digitar)</label>
+            <input type="text" id="v-destino-outro" placeholder="Informe o destino...">
           </div>
           <div class="field-group full">
             <label>Observações</label>
@@ -1176,7 +1355,9 @@
           </div>
           <div class="field-group">
             <label>Empresa / Setor <span class="required">*</span></label>
-            <input type="text" id="c-empresa" placeholder="Empresa ou setor">
+            <select id="c-empresa">
+              <option value="">Selecione...</option>
+            </select>
           </div>
           <div class="field-group">
             <label>Cargo / Função</label>
@@ -1192,19 +1373,23 @@
           </div>
           <div class="field-group">
             <label>Motivo / Atividade</label>
-            <select id="c-motivo">
+            <select id="c-motivo" onchange="cfgCheckOutro('c-motivo','c-motivo-outro')">
               <option value="">Selecione...</option>
-              <option>Trabalho / Expediente</option>
-              <option>Hora Extra</option>
-              <option>Reunião</option>
-              <option>Treinamento</option>
-              <option>Manutenção</option>
-              <option>Outro</option>
             </select>
+          </div>
+          <div class="field-group" id="c-motivo-outro-wrap" style="display:none;">
+            <label>Motivo (digitar)</label>
+            <input type="text" id="c-motivo-outro" placeholder="Descreva o motivo...">
           </div>
           <div class="field-group">
             <label>Destino / Área</label>
-            <input type="text" id="c-destino" placeholder="Ex: Setor Administrativo">
+            <select id="c-destino" onchange="cfgCheckOutro('c-destino','c-destino-outro')">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+          <div class="field-group" id="c-destino-outro-wrap" style="display:none;">
+            <label>Destino (digitar)</label>
+            <input type="text" id="c-destino-outro" placeholder="Informe o destino...">
           </div>
           <div class="field-group full">
             <label>Observações</label>
@@ -1241,23 +1426,29 @@
           </div>
           <div class="field-group">
             <label>Empresa / Organização <span class="required">*</span></label>
-            <input type="text" id="p-empresa" placeholder="Nome da empresa">
-          </div>
-          <div class="field-group">
-            <label>Motivo da Visita</label>
-            <select id="p-motivo">
+            <select id="p-empresa">
               <option value="">Selecione...</option>
-              <option>Visita pessoal</option>
-              <option>Entrega / Coleta</option>
-              <option>Reunião</option>
-              <option>Prestação de serviços</option>
-              <option>Manutenção</option>
-              <option>Outro</option>
             </select>
           </div>
           <div class="field-group">
+            <label>Motivo da Visita</label>
+            <select id="p-motivo" onchange="cfgCheckOutro('p-motivo','p-motivo-outro')">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+          <div class="field-group" id="p-motivo-outro-wrap" style="display:none;">
+            <label>Motivo (digitar)</label>
+            <input type="text" id="p-motivo-outro" placeholder="Descreva o motivo...">
+          </div>
+          <div class="field-group">
             <label>Destino / Setor</label>
-            <input type="text" id="p-destino" placeholder="Ex: Recepção / RH">
+            <select id="p-destino" onchange="cfgCheckOutro('p-destino','p-destino-outro')">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+          <div class="field-group" id="p-destino-outro-wrap" style="display:none;">
+            <label>Destino (digitar)</label>
+            <input type="text" id="p-destino-outro" placeholder="Informe o destino...">
           </div>
           <div class="field-group full">
             <label>Observações</label>
@@ -1403,6 +1594,78 @@
     </div>
   </div>
 
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- TAB: CONFIGURAÇÕES -->
+  <!-- ═══════════════════════════════════════ -->
+  <div id="tab-configuracoes" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">⚙️ <span>Configurações</span> do Sistema</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="cfg-grid">
+
+      <!-- ── EMPRESAS ── -->
+      <div class="cfg-card">
+        <div class="cfg-card-header amber">
+          <span class="cfg-card-icon">🏢</span>
+          <div>
+            <div class="cfg-card-title">Empresas Cadastradas</div>
+            <div class="cfg-card-sub">Aparecerão na lista suspensa de empresas</div>
+          </div>
+          <span class="cfg-card-count" id="count-empresas">0</span>
+        </div>
+        <div class="cfg-add-row">
+          <input type="text" id="cfg-empresa-input" placeholder="Nome da empresa..." class="cfg-input">
+          <button class="cfg-btn-add amber-btn" onclick="cfgAddItem('empresas')">+ Adicionar</button>
+        </div>
+        <div class="cfg-list" id="cfg-lista-empresas">
+          <div class="cfg-empty">Nenhuma empresa cadastrada</div>
+        </div>
+      </div>
+
+      <!-- ── MOTIVOS ── -->
+      <div class="cfg-card">
+        <div class="cfg-card-header teal">
+          <span class="cfg-card-icon">📋</span>
+          <div>
+            <div class="cfg-card-title">Motivos da Visita</div>
+            <div class="cfg-card-sub">Aparecerão na lista suspensa de motivos</div>
+          </div>
+          <span class="cfg-card-count" id="count-motivos">0</span>
+        </div>
+        <div class="cfg-add-row">
+          <input type="text" id="cfg-motivo-input" placeholder="Novo motivo..." class="cfg-input">
+          <button class="cfg-btn-add teal-btn" onclick="cfgAddItem('motivos')">+ Adicionar</button>
+        </div>
+        <div class="cfg-list" id="cfg-lista-motivos">
+          <div class="cfg-empty">Nenhum motivo cadastrado</div>
+        </div>
+      </div>
+
+      <!-- ── DESTINOS ── -->
+      <div class="cfg-card">
+        <div class="cfg-card-header green">
+          <span class="cfg-card-icon">📍</span>
+          <div>
+            <div class="cfg-card-title">Destinos / Setores</div>
+            <div class="cfg-card-sub">Aparecerão na lista suspensa de destinos</div>
+          </div>
+          <span class="cfg-card-count" id="count-destinos">0</span>
+        </div>
+        <div class="cfg-add-row">
+          <input type="text" id="cfg-destino-input" placeholder="Ex: Bloco A, RH, Almoxarifado..." class="cfg-input">
+          <button class="cfg-btn-add green-btn" onclick="cfgAddItem('destinos')">+ Adicionar</button>
+        </div>
+        <div class="cfg-list" id="cfg-lista-destinos">
+          <div class="cfg-empty">Nenhum destino cadastrado</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div><!-- /main -->
 
 <!-- TOAST CONTAINER -->
@@ -1473,13 +1736,13 @@ function registrar(tipo) {
     cpf     = document.getElementById('v-cpf').value.trim();
     doc     = document.getElementById('v-cnh').value.trim();
     telefone= document.getElementById('v-telefone').value.trim();
-    empresa = document.getElementById('v-empresa').value.trim();
-    motivo  = document.getElementById('v-motivo').value;
-    destino = document.getElementById('v-destino').value.trim();
+    empresa = document.getElementById('v-empresa').value.trim() || '';
+    motivo  = cfgGetSelectValue('v-motivo','v-motivo-outro');
+    destino = cfgGetSelectValue('v-destino','v-destino-outro');
     obs     = document.getElementById('v-obs').value.trim();
   } else if (tipo === 'colaborador') {
     nome    = document.getElementById('c-nome').value.trim();
-    empresa = document.getElementById('c-empresa').value.trim();
+    empresa = document.getElementById('c-empresa').value.trim() || '';
     if (!nome)    { toast('⚠️ Nome é obrigatório!', false); return; }
     if (!empresa) { toast('⚠️ Empresa/Setor é obrigatório!', false); return; }
     doc     = document.getElementById('c-matricula').value.trim();
@@ -1488,19 +1751,19 @@ function registrar(tipo) {
     cargo   = document.getElementById('c-cargo').value.trim();
     telefone= document.getElementById('c-telefone').value.trim();
     placa   = document.getElementById('c-placa').value.trim();
-    motivo  = document.getElementById('c-motivo').value;
-    destino = document.getElementById('c-destino').value.trim();
+    motivo  = cfgGetSelectValue('c-motivo','c-motivo-outro');
+    destino = cfgGetSelectValue('c-destino','c-destino-outro');
     obs     = document.getElementById('c-obs').value.trim();
   } else {
     nome    = document.getElementById('p-nome').value.trim();
-    empresa = document.getElementById('p-empresa').value.trim();
+    empresa = document.getElementById('p-empresa').value.trim() || '';
     if (!nome)    { toast('⚠️ Nome é obrigatório!', false); return; }
     if (!empresa) { toast('⚠️ Empresa/Organização é obrigatório!', false); return; }
     cpf     = document.getElementById('p-cpf').value.trim();
     rg      = document.getElementById('p-rg').value.trim();
     telefone= document.getElementById('p-telefone').value.trim();
-    motivo  = document.getElementById('p-motivo').value;
-    destino = document.getElementById('p-destino').value.trim();
+    motivo  = cfgGetSelectValue('p-motivo','p-motivo-outro');
+    destino = cfgGetSelectValue('p-destino','p-destino-outro');
     obs     = document.getElementById('p-obs').value.trim();
   }
 
@@ -1830,7 +2093,15 @@ function supervisorFillForm(r) {
 
     const set = (id, val) => {
       const el = document.getElementById(id);
-      if (el && val && val !== '—') el.value = val;
+      if (!el || !val || val === '—') return;
+      el.value = val;
+      // If select and value not found, add it dynamically
+      if (el.tagName === 'SELECT' && el.value !== val) {
+        const opt = document.createElement('option');
+        opt.value = val; opt.textContent = val;
+        el.insertBefore(opt, el.options[1] || null);
+        el.value = val;
+      }
     };
 
     const setSelect = (id, val) => {
@@ -1883,6 +2154,163 @@ supervisorInput.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
   if (!e.target.closest('.supervisor-search-wrap')) supervisorResults.classList.remove('show');
 });
+
+
+// ─── CONFIGURAÇÕES (Empresas, Motivos, Destinos) ────────────────────────
+
+// Default options
+const defaultMotivos = [
+  'Entrega / Coleta','Manutenção','Reunião','Prestação de serviços',
+  'Visita pessoal','Trabalho / Expediente','Hora Extra','Treinamento','Outro'
+];
+
+let cfgData = JSON.parse(localStorage.getItem('ms-config') || 'null') || {
+  empresas: [],
+  motivos: [...defaultMotivos],
+  destinos: []
+};
+
+function cfgSalvar() {
+  localStorage.setItem('ms-config', JSON.stringify(cfgData));
+  cfgPopulateAllSelects();
+  cfgRenderListas();
+}
+
+function cfgPopulateAllSelects() {
+  const selectIds = {
+    empresas: ['v-empresa','c-empresa','p-empresa'],
+    motivos:  ['v-motivo','c-motivo','p-motivo'],
+    destinos: ['v-destino','c-destino','p-destino'],
+  };
+
+  Object.entries(selectIds).forEach(([key, ids]) => {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const cur = el.value;
+      // Keep first option (placeholder)
+      while (el.options.length > 1) el.remove(1);
+      cfgData[key].forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item; opt.textContent = item;
+        el.appendChild(opt);
+      });
+      // Add "Outro..." for motivo and destino
+      if (key === 'motivos' || key === 'destinos') {
+        const otherOpt = document.createElement('option');
+        otherOpt.value = '__outro__'; otherOpt.textContent = '✏️ Outro (digitar)...';
+        el.appendChild(otherOpt);
+      }
+      // Restore value if still valid
+      if (cur && [...el.options].some(o => o.value === cur)) el.value = cur;
+    });
+  });
+}
+
+function cfgCheckOutro(selId, outroId) {
+  const sel = document.getElementById(selId);
+  const wrapId = selId + '-outro-wrap';
+  const wrap = document.getElementById(wrapId);
+  if (!sel || !wrap) return;
+  if (sel.value === '__outro__') {
+    wrap.style.display = 'flex';
+    const inp = document.getElementById(outroId);
+    if (inp) inp.focus();
+  } else {
+    wrap.style.display = 'none';
+    const inp = document.getElementById(outroId);
+    if (inp) inp.value = '';
+  }
+}
+
+function cfgGetSelectValue(selId, outroId) {
+  const sel = document.getElementById(selId);
+  if (!sel) return '';
+  if (sel.value === '__outro__') {
+    const inp = document.getElementById(outroId);
+    return inp ? inp.value.trim() : '';
+  }
+  return sel.value;
+}
+
+function cfgAddItem(tipo) {
+  const inputMap = { empresas:'cfg-empresa-input', motivos:'cfg-motivo-input', destinos:'cfg-destino-input' };
+  const inp = document.getElementById(inputMap[tipo]);
+  const val = inp.value.trim();
+  if (!val) { toast('⚠️ Digite um valor antes de adicionar!', false); return; }
+  if (cfgData[tipo].includes(val)) { toast('⚠️ Este item já existe na lista!', false); return; }
+  cfgData[tipo].push(val);
+  inp.value = '';
+  cfgSalvar();
+  toast('✅ Item adicionado com sucesso!');
+}
+
+function cfgRemoveItem(tipo, idx) {
+  cfgData[tipo].splice(idx, 1);
+  cfgSalvar();
+}
+
+function cfgStartEdit(tipo, idx, spanEl) {
+  const cur = cfgData[tipo][idx];
+  const item = spanEl.closest('.cfg-item');
+  const nameEl = item.querySelector('.cfg-item-name');
+  const editBtn = item.querySelector('.cfg-item-edit');
+  const delBtn = item.querySelector('.cfg-item-del');
+
+  const inp = document.createElement('input');
+  inp.className = 'cfg-item-input';
+  inp.value = cur;
+  nameEl.replaceWith(inp);
+  inp.focus(); inp.select();
+
+  editBtn.textContent = '💾 Salvar';
+  editBtn.onclick = () => cfgSaveEdit(tipo, idx, inp, item, editBtn, delBtn);
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') cfgSaveEdit(tipo, idx, inp, item, editBtn, delBtn);
+    if (e.key === 'Escape') cfgSalvar(); // re-render cancels edit
+  });
+}
+
+function cfgSaveEdit(tipo, idx, inp, item, editBtn, delBtn) {
+  const val = inp.value.trim();
+  if (!val) { toast('⚠️ O campo não pode ficar vazio!', false); return; }
+  cfgData[tipo][idx] = val;
+  cfgSalvar();
+  toast('✅ Item atualizado!');
+}
+
+function cfgRenderListas() {
+  const tipoNames = { empresas:'Empresa', motivos:'Motivo', destinos:'Destino' };
+  ['empresas','motivos','destinos'].forEach(tipo => {
+    const lista = document.getElementById('cfg-lista-' + tipo);
+    const counter = document.getElementById('count-' + tipo);
+    if (!lista) return;
+    const items = cfgData[tipo];
+    counter.textContent = items.length;
+    if (!items.length) {
+      lista.innerHTML = `<div class="cfg-empty">Nenhum ${tipoNames[tipo].toLowerCase()} cadastrado</div>`;
+      return;
+    }
+    lista.innerHTML = items.map((item, i) => `
+      <div class="cfg-item">
+        <span class="cfg-item-name">${item}</span>
+        <button class="cfg-item-edit" onclick="cfgStartEdit('${tipo}', ${i}, this)">✏️ Editar</button>
+        <button class="cfg-item-del" onclick="cfgRemoveItem('${tipo}', ${i})">✕</button>
+      </div>
+    `).join('');
+  });
+}
+
+// Allow Enter key on config inputs
+['cfg-empresa-input','cfg-motivo-input','cfg-destino-input'].forEach((id, i) => {
+  const tipos = ['empresas','motivos','destinos'];
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') cfgAddItem(tipos[i]); });
+});
+
+// Initialize on load
+cfgPopulateAllSelects();
+cfgRenderListas();
 
 </script>
 </body>
